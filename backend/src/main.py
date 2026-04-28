@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.database import engine, Base
 from src.routers import printers, filaments, users
+from src.routers import printer_actions
 
 # Tabellen erstellen
 import src.models.printer
@@ -19,9 +20,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 app.include_router(printers.router)
 app.include_router(filaments.router)
 app.include_router(users.router)
+app.include_router(printer_actions.router)
 
 
 @app.get("/health")
