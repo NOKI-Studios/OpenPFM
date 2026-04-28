@@ -15,11 +15,10 @@ app = FastAPI(title="OpenPFM API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origin_regex=r"http://localhost:\d+",
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 app.include_router(printers.router)
 app.include_router(filaments.router)
 app.include_router(users.router)
