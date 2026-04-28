@@ -1,0 +1,25 @@
+# Environment
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+
+# Node
+node_modules/
+dist/
+
+# IDE
+.idea/
+.vscode/
+
+# Docker
+*.log
+
+# n8n data (enthält secrets)
+n8n/data/
+
+# OrcaSlicer output (generierte Dateien)
+slicer/output/
