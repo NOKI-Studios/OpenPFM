@@ -1,11 +1,11 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.database import engine, Base
-from src.routers import printers, filaments, users
-from src.routers import printer_actions
+from src.routers import printers, filaments, users, printer_actions
+from src.routers import auth
+from src.routers.auth import get_current_user
 
-# Tabellen erstellen
 import src.models.printer
 import src.models.filament
 import src.models.user
@@ -21,10 +21,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(printers.router)
-app.include_router(filaments.router)
-app.include_router(users.router)
-app.include_router(printer_actions.router)
+app.include_router(auth.router)
+
+app.include_router(printers.router, dependencies=[Depends(get_current_user)])
+app.include_router(filaments.router, dependencies=[Depends(get_current_user)])
+app.include_router(users.router, dependencies=[Depends(get_current_user)])
+app.include_router(printer_actions.router, dependencies=[Depends(get_current_user)])
 
 
 @app.get("/health")

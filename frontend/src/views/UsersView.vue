@@ -88,7 +88,10 @@
             </Select>
           </div>
           <div class="flex items-center gap-2">
-            <Switch v-model:checked="form.is_active" />
+            <Switch
+  :model-value="form.is_active"
+  @update:model-value="(val: boolean) => form.is_active = val"
+/>
             <Label>Aktiv</Label>
           </div>
           <DialogFooter>

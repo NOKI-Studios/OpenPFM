@@ -8,7 +8,7 @@
               <p class="text-xs text-muted-foreground uppercase tracking-wider">Drucker</p>
               <p class="text-3xl font-bold mt-1">{{ stats.printers }}</p>
             </div>
-            <RiPrinterLine class="w-8 h-8 text-muted-foreground/30" />
+            <RiStackLine class="w-8 h-8 text-muted-foreground/30" />
           </div>
         </CardContent>
       </Card>

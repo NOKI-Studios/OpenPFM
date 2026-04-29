@@ -5,4 +5,10 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
+// Token aus localStorage beim Start setzen
+const token = localStorage.getItem('token')
+if (token) {
+  api.defaults.headers.common['Authorization'] = `Bearer ${token}`
+}
+
 export default api

@@ -1,13 +1,12 @@
 <template>
   <Sidebar collapsible="offcanvas" variant="inset">
-    <!-- Header -->
     <SidebarHeader>
       <SidebarMenu>
         <SidebarMenuItem>
           <SidebarMenuButton size="lg" as-child>
             <RouterLink to="/">
               <div class="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                <RiPrinterLine class="size-4" />
+                <RiStackLine class="size-4" />
               </div>
               <div class="grid flex-1 text-left text-sm leading-tight">
                 <span class="truncate font-semibold">OpenPFM</span>
@@ -19,7 +18,6 @@
       </SidebarMenu>
     </SidebarHeader>
 
-    <!-- Main nav -->
     <SidebarContent>
       <SidebarGroup>
         <SidebarGroupLabel>Navigation</SidebarGroupLabel>
@@ -54,37 +52,8 @@
       </SidebarGroup>
     </SidebarContent>
 
-    <!-- Footer -->
     <SidebarFooter>
-      <SidebarMenu>
-        <SidebarMenuItem>
-          <DropdownMenu>
-            <DropdownMenuTrigger as-child>
-              <SidebarMenuButton size="lg" class="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
-                <Avatar class="h-8 w-8 rounded-lg">
-                  <AvatarFallback class="rounded-lg">AD</AvatarFallback>
-                </Avatar>
-                <div class="grid flex-1 text-left text-sm leading-tight">
-                  <span class="truncate font-semibold">Admin</span>
-                  <span class="truncate text-xs text-muted-foreground">admin@openpfm.local</span>
-                </div>
-                <RiMoreLine class="ml-auto size-4" />
-              </SidebarMenuButton>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent class="w-56" side="top" align="end">
-              <DropdownMenuItem>
-                <RiUserLine class="mr-2 size-4" />
-                Profil
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem class="text-destructive">
-                <RiLogoutBoxLine class="mr-2 size-4" />
-                Abmelden
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </SidebarMenuItem>
-      </SidebarMenu>
+      <NavUser />
     </SidebarFooter>
     <SidebarRail />
   </Sidebar>
@@ -97,12 +66,10 @@ import {
   SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton,
   SidebarMenuItem, SidebarRail,
 } from '@/components/ui/sidebar'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
-  RiPrinterLine, RiBox3Line, RiGroupLine, RiDashboardLine,
-  RiSettings4Line, RiMoreLine, RiUserLine, RiLogoutBoxLine,
+  RiStackLine, RiPrinterLine, RiBox3Line, RiGroupLine, RiDashboardLine, RiSettings4Line,
 } from '@remixicon/vue'
+import NavUser from '@/components/NavUser.vue'
 
 const route = useRoute()
 
