@@ -6,6 +6,9 @@ Open source print farm manager for Bambu Lab 3D printers. Self-hosted, runs on D
 
 OpenPFM is a web-based platform for remote control, automation and management of Bambu Lab 3D printers. It provides a clean dashboard for monitoring printer status, managing filament inventory, and controlling print jobs across multiple printers.
 
+Your Bambu printer (in my case the A1) needs to be on firmware 01.04 and in lan only mode. Keep in mind that bambu handy wont work in lan only mode. You can still upgrade to the newest firmware, but expect some features to not work due to changes. Firmware 01.04 works the best and is actively being tested. 
+Check out downgrading here: [BambuLab Wiki](https://wiki.bambulab.com/en/knowledge-sharing/firmware-downgrade)
+
 ## Info
 
 OpenPFM is currently in active development. Please submit issues, feature requests or pull requests when you encounter problems.
@@ -14,6 +17,7 @@ OpenPFM is currently in active development. Please submit issues, feature reques
 
 - Remote printer control (start, stop, pause, resume, home, light)
 - Real-time printer status monitoring
+- Camera streaming
 - Filament inventory management with low-stock alerts
 - AMS / multi-material system tracking
 - File management via FTP
@@ -31,7 +35,7 @@ OpenPFM is currently in active development. Please submit issues, feature reques
 | Backend | Python, FastAPI |
 | Database | PostgreSQL |
 | Automation | n8n |
-| Slicer | OrcaSlicer (headless) |
+| Slicer | OrcaSlicer (headless, in a Ubuntu environment) |
 | Infrastructure | Docker, Docker Compose |
 
 ## Supported Hardware
@@ -44,6 +48,8 @@ OpenPFM is currently in active development. Please submit issues, feature reques
 - Bambu Lab X1E
 
 AMS, AMS Lite and AMS Hub are supported.
+
+The currently tested hardware is the Bambu a1, as i dont have other printers.
 
 ## Requirements
 
