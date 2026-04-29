@@ -52,6 +52,7 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { authApi } from '@/api/auth'
 import { useAuthStore } from '@/stores/auth'
+import { resetSetupCheck } from '@/router'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -70,6 +71,7 @@ async function handleSetup() {
   loading.value = true
   try {
     await authApi.setup(form)
+    resetSetupCheck()
     await auth.login(form.email, form.password)
     router.push('/')
   } catch (e: any) {
