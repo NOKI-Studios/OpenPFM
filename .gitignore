@@ -23,3 +23,7 @@ n8n/data/
 
 # OrcaSlicer output (generierte Dateien)
 slicer/output/
+
+# macOS
+.DS_Store
+**/.DS_Store
