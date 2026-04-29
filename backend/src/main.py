@@ -16,7 +16,7 @@ app = FastAPI(title="OpenPFM API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=r"http://localhost:\d+",
+    allow_origin_regex=r"http://(localhost|\d+\.\d+\.\d+\.\d+)(:\d+)?", #TODO: Add Release IP/Domain here
     allow_methods=["*"],
     allow_headers=["*"],
 )
