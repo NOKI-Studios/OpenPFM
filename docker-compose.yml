@@ -19,6 +19,7 @@ services:
       - .env
   slicer:
     build: ./slicer
+    platform: linux/amd64
     volumes:
       - slicer_profiles:/data/profiles
       - slicer_output:/data/output
@@ -47,7 +48,6 @@ services:
       - ./n8n/data:/home/node/.n8n
     depends_on:
       - db
-
 volumes:
   postgres_data:
   slicer_profiles:

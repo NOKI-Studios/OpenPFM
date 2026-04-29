@@ -1,4 +1,4 @@
-FROM ubuntu:24.04
+FROM --platform=linux/amd64 ubuntu:24.04
 
 RUN apt-get update && apt-get install -y \
     wget \
@@ -40,14 +40,9 @@ RUN wget -q \
     -O /usr/local/bin/orcaslicer && \
     chmod +x /usr/local/bin/orcaslicer
 
-RUN cd /opt && \
-    /usr/local/bin/orcaslicer --appimage-extract && \
-    mv squashfs-root orcaslicer-extracted && \
-    ln -sf /opt/orcaslicer-extracted/AppRun /usr/local/bin/orcaslicer
-
 ENV DISPLAY=:99
 ENV LIBGL_ALWAYS_SOFTWARE=1
+ENV APPIMAGE_EXTRACT_AND_RUN=1
 
 VOLUME ["/data/profiles"]
-
 CMD ["sh", "-c", "Xvfb :99 -screen 0 1024x768x24 & tail -f /dev/null"]
