@@ -103,50 +103,25 @@ Open the frontend, navigate to Drucker and add your Bambu Lab printer with its I
 
 The access code can be found in the Bambu Lab app under your printer settings.
 
-## Project Structure
-
-```
-OpenPFM/
-├── backend/
-│   ├── src/
-│   │   ├── models/        # SQLAlchemy models
-│   │   ├── routers/       # FastAPI endpoints
-│   │   ├── schemas/       # Pydantic schemas
-│   │   ├── scripts/       # Bambu printer control scripts
-│   │   └── services/      # Business logic
-│   └── Dockerfile
-├── frontend/
-│   ├── src/
-│   │   ├── api/           # Axios API clients
-│   │   ├── components/    # Vue components
-│   │   ├── types/         # TypeScript types
-│   │   └── views/         # Page views
-│   └── Dockerfile
-├── slicer/
-│   └── Dockerfile         # OrcaSlicer headless container
-├── n8n/                   # n8n data volume
-└── docker-compose.yml
-```
 
 ## API
 
 The REST API is documented via Swagger UI at `http://localhost:8000/docs`.
 
-Main endpoint groups:
+### Authenticating in Swagger UI
 
-- `GET/POST/PATCH/DELETE /printers` — printer management
-- `GET/POST /printers/{id}/status` — live status
-- `POST /printers/{id}/print` — start a print job
-- `POST /printers/{id}/stop` — stop print
-- `POST /printers/{id}/pause` — pause print
-- `POST /printers/{id}/resume` — resume print
-- `POST /printers/{id}/home` — home axes
-- `POST /printers/{id}/light` — control work light
-- `GET/POST/DELETE /printers/{id}/files` — file management
-- `POST /printers/{id}/upload` — upload file via FTP
-- `GET/POST/PATCH/DELETE /filaments` — filament types
-- `GET/POST/PATCH/DELETE /filaments/{id}/spools` — spool inventory
-- `GET/POST/PATCH/DELETE /users` — user management
+Click the **Authorize** button in the top right of the Swagger UI. A dialog will appear with the following fields:
+
+| Field | Value |
+|---|---|
+| `username` | Your email address |
+| `password` | Your password |
+| `client_id` | Leave empty |
+| `client_secret` | Leave empty |
+
+> **Note:** The `client_id` and `client_secret` fields are shown by Swagger UI by default for OAuth2 password flows, but are not used by this API. You can safely leave them blank.
+
+After clicking **Authorize**, all subsequent requests in the Swagger UI will include your Bearer token automatically.
 
 ## Contributing
 
