@@ -2,10 +2,17 @@
   <div class="space-y-4">
     <div class="flex items-center justify-between">
       <p class="text-sm text-muted-foreground">{{ users.length }} Benutzer</p>
-      <Button size="sm" @click="openCreate">
-        <RiAddLine class="w-4 h-4 mr-2" />
-        Benutzer hinzufügen
-      </Button>
+      <div class="flex items-center gap-2">
+        <ViewToggle v-model="viewMode" />
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button size="icon" @click="openCreate">
+              <RiAddLine class="w-4 h-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Benutzer hinzufügen</TooltipContent>
+        </Tooltip>
+      </div>
     </div>
 
     <div v-if="loading" class="text-sm text-muted-foreground">Laden...</div>
@@ -15,6 +22,46 @@
       <p class="text-sm font-medium">Noch keine Benutzer</p>
     </div>
 
+    <!-- Grid view -->
+    <div v-else-if="viewMode === 'grid'" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <Card v-for="user in users" :key="user.id">
+        <CardHeader class="pb-2">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-sm font-medium shrink-0">
+                {{ user.username.slice(0, 2).toUpperCase() }}
+              </div>
+              <div>
+                <CardTitle class="text-base">{{ user.username }}</CardTitle>
+                <p class="text-xs text-muted-foreground">{{ user.email }}</p>
+              </div>
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" class="h-8 w-8 -mt-1">
+                  <RiMoreLine class="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem @click="openEdit(user)">Bearbeiten</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem class="text-destructive" @click="confirmDelete(user)">Löschen</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div class="flex items-center gap-2">
+            <Badge :variant="user.role === 'admin' ? 'default' : 'secondary'">{{ user.role }}</Badge>
+            <Badge :variant="user.is_active ? 'outline' : 'destructive'">
+              {{ user.is_active ? 'Aktiv' : 'Inaktiv' }}
+            </Badge>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+
+    <!-- List view -->
     <div v-else>
       <Table>
         <TableHeader>
@@ -31,9 +78,7 @@
             <TableCell class="font-medium">{{ user.username }}</TableCell>
             <TableCell class="text-muted-foreground">{{ user.email }}</TableCell>
             <TableCell>
-              <Badge :variant="user.role === 'admin' ? 'default' : 'secondary'">
-                {{ user.role }}
-              </Badge>
+              <Badge :variant="user.role === 'admin' ? 'default' : 'secondary'">{{ user.role }}</Badge>
             </TableCell>
             <TableCell>
               <Badge :variant="user.is_active ? 'outline' : 'destructive'">
@@ -89,9 +134,9 @@
           </div>
           <div class="flex items-center gap-2">
             <Switch
-  :model-value="form.is_active"
-  @update:model-value="(val: boolean) => form.is_active = val"
-/>
+              :model-value="form.is_active"
+              @update:model-value="(val: boolean) => form.is_active = val"
+            />
             <Label>Aktiv</Label>
           </div>
           <DialogFooter>
@@ -107,6 +152,7 @@
 <script setup lang="ts">
 import { ref, onMounted, reactive } from 'vue'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -115,15 +161,18 @@ import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { RiAddLine, RiGroupLine, RiMoreLine } from '@remixicon/vue'
 import { usersApi } from '@/api/users'
 import type { User } from '@/types/user'
+import ViewToggle from '@/components/ViewToggle.vue'
 
 const users = ref<User[]>([])
 const loading = ref(true)
 const dialogOpen = ref(false)
 const saving = ref(false)
 const editingUser = ref<User | null>(null)
+const viewMode = ref<'grid' | 'list'>('list')
 
 const form = reactive({ username: '', email: '', password: '', role: 'user' as 'admin' | 'user', is_active: true })
 

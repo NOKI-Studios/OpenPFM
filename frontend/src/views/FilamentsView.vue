@@ -2,10 +2,17 @@
   <div class="space-y-4">
     <div class="flex items-center justify-between">
       <p class="text-sm text-muted-foreground">{{ filaments.length }} Filament-Typen</p>
-      <Button size="sm" @click="openCreate">
-        <RiAddLine class="w-4 h-4 mr-2" />
-        Filament hinzufügen
-      </Button>
+      <div class="flex items-center gap-2">
+        <ViewToggle v-model="viewMode" />
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button size="icon" @click="openCreate">
+              <RiAddLine class="w-4 h-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Filament hinzufügen</TooltipContent>
+        </Tooltip>
+      </div>
     </div>
 
     <div v-if="loading" class="text-sm text-muted-foreground">Laden...</div>
@@ -16,6 +23,68 @@
       <p class="text-xs text-muted-foreground mt-1">Füge deinen ersten Filament-Typ hinzu</p>
     </div>
 
+    <!-- Grid view -->
+    <div v-else-if="viewMode === 'grid'" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <Card v-for="filament in filaments" :key="filament.id">
+        <CardHeader class="pb-2">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-3">
+              <div
+                class="w-8 h-8 rounded-full border border-border shrink-0"
+                :style="{ backgroundColor: filament.color_hex || '#888' }"
+              ></div>
+              <div>
+                <CardTitle class="text-base">{{ filament.name }}</CardTitle>
+                <p class="text-xs text-muted-foreground">{{ filament.brand }}</p>
+              </div>
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" class="h-8 w-8 -mt-1">
+                  <RiMoreLine class="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem @click="openSpools(filament)">Spulen verwalten</DropdownMenuItem>
+                <DropdownMenuItem @click="openEdit(filament)">Bearbeiten</DropdownMenuItem>
+                <DropdownMenuItem v-if="filament.purchase_url" @click="openUrl(filament.purchase_url)">
+                  Nachbestellen
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem class="text-destructive" @click="confirmDelete(filament)">Löschen</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </CardHeader>
+        <CardContent class="space-y-2">
+          <div class="flex items-center gap-2">
+            <Badge variant="outline">{{ filament.material }}</Badge>
+            <span
+              v-if="filament.spool_count <= filament.low_stock_threshold"
+              class="text-xs text-destructive font-medium"
+            >Niedrig</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <div>
+              <p class="text-muted-foreground">Düse</p>
+              <p class="font-medium">{{ filament.nozzle_temp_min }}–{{ filament.nozzle_temp_max }}°C</p>
+            </div>
+            <div>
+              <p class="text-muted-foreground">Bett</p>
+              <p class="font-medium">{{ filament.bed_temp }}°C</p>
+            </div>
+            <div>
+              <p class="text-muted-foreground">Spulen</p>
+              <p class="font-medium" :class="filament.spool_count <= filament.low_stock_threshold ? 'text-destructive' : ''">
+                {{ filament.spool_count }}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+
+    <!-- List view -->
     <div v-else>
       <Table>
         <TableHeader>
@@ -50,13 +119,8 @@
                 <span
                   class="text-sm font-medium"
                   :class="filament.spool_count <= filament.low_stock_threshold ? 'text-destructive' : ''"
-                >
-                  {{ filament.spool_count }}
-                </span>
-                <span
-                  v-if="filament.spool_count <= filament.low_stock_threshold"
-                  class="text-xs text-destructive"
-                >low</span>
+                >{{ filament.spool_count }}</span>
+                <span v-if="filament.spool_count <= filament.low_stock_threshold" class="text-xs text-destructive">low</span>
               </div>
             </TableCell>
             <TableCell>
@@ -198,6 +262,7 @@
 <script setup lang="ts">
 import { ref, onMounted, reactive } from 'vue'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -205,9 +270,11 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { RiAddLine, RiBox3Line, RiMoreLine, RiDeleteBin6Line } from '@remixicon/vue'
 import { filamentsApi } from '@/api/filaments'
 import type { Filament, FilamentSpool } from '@/types/filament'
+import ViewToggle from '@/components/ViewToggle.vue'
 
 const filaments = ref<Filament[]>([])
 const loading = ref(true)
@@ -217,6 +284,7 @@ const saving = ref(false)
 const editingFilament = ref<Filament | null>(null)
 const selectedFilament = ref<Filament | null>(null)
 const spools = ref<FilamentSpool[]>([])
+const viewMode = ref<'grid' | 'list'>('list')
 
 const materials = ['PLA', 'PETG', 'ABS', 'ASA', 'TPU', 'PA', 'PC', 'PLA-CF', 'PETG-CF', 'Other']
 

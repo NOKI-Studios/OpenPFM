@@ -2,10 +2,17 @@
   <div class="space-y-4">
     <div class="flex items-center justify-between">
       <p class="text-sm text-muted-foreground">{{ printers.length }} Drucker konfiguriert</p>
-      <Button size="sm" @click="openCreate">
-        <RiAddLine class="w-4 h-4 mr-2" />
-        Drucker hinzufügen
-      </Button>
+      <div class="flex items-center gap-2">
+        <ViewToggle v-model="viewMode" />
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button size="icon" @click="openCreate">
+              <RiAddLine class="w-4 h-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Drucker hinzufügen</TooltipContent>
+        </Tooltip>
+      </div>
     </div>
 
     <div v-if="loading" class="text-sm text-muted-foreground">Laden...</div>
@@ -16,75 +23,67 @@
       <p class="text-xs text-muted-foreground mt-1">Füge deinen ersten Drucker hinzu</p>
     </div>
 
-    <div v-else class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-      <Card v-for="printer in printers" :key="printer.id" class="relative">
-        <CardHeader class="pb-2">
-          <div class="flex items-start justify-between">
-            <div class="flex items-center gap-2">
-              <div class="w-2 h-2 rounded-full mt-1 shrink-0" :class="statusColor(printer.status)"></div>
-              <div>
-                <CardTitle class="text-base">{{ printer.name }}</CardTitle>
-                <p class="text-xs text-muted-foreground">{{ printer.model }}</p>
-              </div>
-            </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" class="h-8 w-8">
-                  <RiMoreLine class="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem @click="openEdit(printer)">Bearbeiten</DropdownMenuItem>
-                <DropdownMenuItem v-if="printer.purchase_url" @click="openUrl(printer.purchase_url)">
-                  Nachbestellen
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem class="text-destructive" @click="confirmDelete(printer)">
-                  Löschen
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </CardHeader>
-        <CardContent class="space-y-3">
-          <div class="grid grid-cols-2 gap-2 text-xs">
-            <div>
-              <p class="text-muted-foreground">IP</p>
-              <p class="font-mono font-medium">{{ printer.ip_address }}</p>
-            </div>
-            <div>
-              <p class="text-muted-foreground">Düse</p>
-              <p class="font-medium">{{ printer.nozzle_diameter }}mm</p>
-            </div>
-            <div>
-              <p class="text-muted-foreground">Status</p>
-              <Badge :variant="statusVariant(printer.status)" class="text-xs">{{ printer.status }}</Badge>
-            </div>
-            <div>
-              <p class="text-muted-foreground">AMS</p>
-              <p class="font-medium">{{ printer.has_ams ? printer.ams_units.length + ' Einheit(en)' : 'Nein' }}</p>
-            </div>
-          </div>
+    <!-- Grid view -->
+    <div v-else-if="viewMode === 'grid'" class="grid gap-4 grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+      <PrinterCard
+        v-for="printer in printers"
+        :key="printer.id"
+        :printer="printer"
+        @edit="openEdit"
+        @delete="confirmDelete"
+      />
+    </div>
 
-          <!-- AMS slots -->
-          <div v-if="printer.has_ams && printer.ams_units.length > 0" class="border-t border-border pt-3">
-            <p class="text-xs text-muted-foreground mb-2">AMS Slots</p>
-            <div v-for="ams in printer.ams_units" :key="ams.id" class="mb-2">
-              <p class="text-xs font-medium mb-1">{{ ams.type.toUpperCase() }} #{{ ams.ams_index + 1 }}</p>
-              <div class="flex gap-1">
-                <div
-                  v-for="slot in ams.slots"
-                  :key="slot.id"
-                  class="flex-1 h-5 rounded-sm border border-border text-xs flex items-center justify-center"
-                  :class="slot.spool_id ? 'bg-primary/20' : 'bg-muted'"
-                >
-                  {{ slot.slot_index + 1 }}
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+    <!-- List view -->
+    <div v-else>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead class="w-4"></TableHead>
+            <TableHead>Name</TableHead>
+            <TableHead>Modell</TableHead>
+            <TableHead>IP</TableHead>
+            <TableHead>Düse</TableHead>
+            <TableHead>AMS</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead></TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow v-for="printer in printers" :key="printer.id">
+            <TableCell>
+              <div class="w-2 h-2 rounded-full" :class="statusColor(printer.status)"></div>
+            </TableCell>
+            <TableCell class="font-medium">{{ printer.name }}</TableCell>
+            <TableCell class="text-muted-foreground">{{ printer.model }}</TableCell>
+            <TableCell class="font-mono text-xs">{{ printer.ip_address }}</TableCell>
+            <TableCell>{{ printer.nozzle_diameter }}mm</TableCell>
+            <TableCell>{{ printer.has_ams ? printer.ams_units.length + ' Einheit(en)' : '—' }}</TableCell>
+            <TableCell>
+              <Badge :variant="statusVariant(printer.status)" class="text-xs">{{ printer.status }}</Badge>
+            </TableCell>
+            <TableCell>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" class="h-8 w-8">
+                    <RiMoreLine class="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem @click="openEdit(printer)">Bearbeiten</DropdownMenuItem>
+                  <DropdownMenuItem v-if="printer.purchase_url" @click="openUrl(printer.purchase_url)">
+                    Nachbestellen
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem class="text-destructive" @click="confirmDelete(printer)">
+                    Löschen
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
     </div>
 
     <!-- Create/Edit Dialog -->
@@ -135,8 +134,8 @@
           </div>
           <div class="flex items-center gap-2">
             <Switch
-                :model-value="form.has_ams"
-                @update:model-value="(val: boolean) => form.has_ams = val"
+              :model-value="form.has_ams"
+              @update:model-value="(val: boolean) => form.has_ams = val"
             />
             <Label>Hat AMS / Multi-Material System</Label>
           </div>
@@ -153,7 +152,6 @@
 <script setup lang="ts">
 import { ref, onMounted, reactive } from 'vue'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -161,15 +159,20 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { RiAddLine, RiPrinterLine, RiMoreLine } from '@remixicon/vue'
 import { printersApi } from '@/api/printers'
 import type { Printer as PrinterType } from '@/types/printer'
+import ViewToggle from '@/components/ViewToggle.vue'
+import PrinterCard from '@/components/PrinterCard.vue'
 
 const printers = ref<PrinterType[]>([])
 const loading = ref(true)
 const dialogOpen = ref(false)
 const saving = ref(false)
 const editingPrinter = ref<PrinterType | null>(null)
+const viewMode = ref<'grid' | 'list'>('grid')
 
 const printerModels = ['Bambu Lab A1', 'Bambu Lab A1 mini', 'Bambu Lab P1P', 'Bambu Lab P1S', 'Bambu Lab X1C', 'Bambu Lab X1E']
 
@@ -195,11 +198,7 @@ const resetForm = () => {
   form.purchase_url = ''
 }
 
-const openCreate = () => {
-  editingPrinter.value = null
-  resetForm()
-  dialogOpen.value = true
-}
+const openCreate = () => { editingPrinter.value = null; resetForm(); dialogOpen.value = true }
 
 const openEdit = (printer: PrinterType) => {
   editingPrinter.value = printer
@@ -216,7 +215,6 @@ const openEdit = (printer: PrinterType) => {
 
 const savePrinter = async () => {
   saving.value = true
-
   try {
     const data = {
       name: form.name,
