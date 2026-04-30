@@ -1,8 +1,13 @@
 <template>
   <div class="space-y-4">
-    <div class="flex items-center justify-between">
-      <p class="text-sm text-muted-foreground">{{ filaments.length }} Filament-Typen</p>
-      <div class="flex items-center gap-2">
+    <div class="flex items-center justify-between gap-4 flex-wrap">
+      <SearchFilter
+        v-model:search="search"
+        v-model:filter-values="filterValues"
+        :filters="filterDefs"
+      />
+      <div class="flex items-center gap-2 ml-auto">
+        <p class="text-sm text-muted-foreground">{{ filteredFilaments.length }} von {{ filaments.length }}</p>
         <ViewToggle v-model="viewMode" />
         <Tooltip>
           <TooltipTrigger as-child>
@@ -17,6 +22,12 @@
 
     <div v-if="loading" class="text-sm text-muted-foreground">Laden...</div>
 
+    <div v-else-if="filteredFilaments.length === 0 && filaments.length > 0" class="flex flex-col items-center justify-center py-16 text-center">
+      <RiSearchLine class="w-12 h-12 text-muted-foreground/30 mb-4" />
+      <p class="text-sm font-medium">Keine Ergebnisse</p>
+      <p class="text-xs text-muted-foreground mt-1">Versuche andere Suchbegriffe oder Filter</p>
+    </div>
+
     <div v-else-if="filaments.length === 0" class="flex flex-col items-center justify-center py-16 text-center">
       <RiBox3Line class="w-12 h-12 text-muted-foreground/30 mb-4" />
       <p class="text-sm font-medium">Noch keine Filamente</p>
@@ -25,7 +36,7 @@
 
     <!-- Grid view -->
     <div v-else-if="viewMode === 'grid'" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-      <Card v-for="filament in filaments" :key="filament.id">
+      <Card v-for="filament in filteredFilaments" :key="filament.id">
         <CardHeader class="pb-2">
           <div class="flex items-start justify-between">
             <div class="flex items-center gap-3">
@@ -100,7 +111,7 @@
           </TableRow>
         </TableHeader>
         <TableBody>
-          <TableRow v-for="filament in filaments" :key="filament.id">
+          <TableRow v-for="filament in filteredFilaments" :key="filament.id">
             <TableCell>
               <div
                 class="w-5 h-5 rounded-full border border-border"
@@ -260,7 +271,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, reactive } from 'vue'
+import { ref, onMounted, reactive, computed } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -271,10 +282,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { RiAddLine, RiBox3Line, RiMoreLine, RiDeleteBin6Line } from '@remixicon/vue'
+import { RiAddLine, RiBox3Line, RiMoreLine, RiDeleteBin6Line, RiSearchLine } from '@remixicon/vue'
 import { filamentsApi } from '@/api/filaments'
 import type { Filament, FilamentSpool } from '@/types/filament'
 import ViewToggle from '@/components/ViewToggle.vue'
+import SearchFilter from '@/components/SearchFilter.vue'
 
 const filaments = ref<Filament[]>([])
 const loading = ref(true)
@@ -285,6 +297,35 @@ const editingFilament = ref<Filament | null>(null)
 const selectedFilament = ref<Filament | null>(null)
 const spools = ref<FilamentSpool[]>([])
 const viewMode = ref<'grid' | 'list'>('list')
+const search = ref('')
+const filterValues = ref<Record<string, string>>({})
+
+const filterDefs = [
+  {
+    label: 'Material',
+    value: 'material',
+    options: ['PLA', 'PETG', 'ABS', 'ASA', 'TPU', 'PA', 'PC', 'PLA-CF', 'PETG-CF', 'Other'].map(m => ({ label: m, value: m })),
+  },
+  {
+    label: 'Bestand',
+    value: 'stock',
+    options: [
+      { label: 'Niedrig', value: 'low' },
+      { label: 'OK', value: 'ok' },
+    ],
+  },
+]
+
+const filteredFilaments = computed(() => {
+  return filaments.value.filter(f => {
+    const q = search.value.toLowerCase()
+    if (q && !f.name.toLowerCase().includes(q) && !f.brand.toLowerCase().includes(q) && !f.color.toLowerCase().includes(q)) return false
+    if (filterValues.value.material && f.material !== filterValues.value.material) return false
+    if (filterValues.value.stock === 'low' && f.spool_count > f.low_stock_threshold) return false
+    if (filterValues.value.stock === 'ok' && f.spool_count <= f.low_stock_threshold) return false
+    return true
+  })
+})
 
 const materials = ['PLA', 'PETG', 'ABS', 'ASA', 'TPU', 'PA', 'PC', 'PLA-CF', 'PETG-CF', 'Other']
 

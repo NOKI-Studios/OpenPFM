@@ -1,8 +1,13 @@
 <template>
   <div class="space-y-4">
-    <div class="flex items-center justify-between">
-      <p class="text-sm text-muted-foreground">{{ users.length }} Benutzer</p>
-      <div class="flex items-center gap-2">
+    <div class="flex items-center justify-between gap-4 flex-wrap">
+      <SearchFilter
+        v-model:search="search"
+        v-model:filter-values="filterValues"
+        :filters="filterDefs"
+      />
+      <div class="flex items-center gap-2 ml-auto">
+        <p class="text-sm text-muted-foreground">{{ filteredUsers.length }} von {{ users.length }}</p>
         <ViewToggle v-model="viewMode" />
         <Tooltip>
           <TooltipTrigger as-child>
@@ -17,6 +22,12 @@
 
     <div v-if="loading" class="text-sm text-muted-foreground">Laden...</div>
 
+    <div v-else-if="filteredUsers.length === 0 && users.length > 0" class="flex flex-col items-center justify-center py-16 text-center">
+      <RiSearchLine class="w-12 h-12 text-muted-foreground/30 mb-4" />
+      <p class="text-sm font-medium">Keine Ergebnisse</p>
+      <p class="text-xs text-muted-foreground mt-1">Versuche andere Suchbegriffe oder Filter</p>
+    </div>
+
     <div v-else-if="users.length === 0" class="flex flex-col items-center justify-center py-16 text-center">
       <RiGroupLine class="w-12 h-12 text-muted-foreground/30 mb-4" />
       <p class="text-sm font-medium">Noch keine Benutzer</p>
@@ -24,7 +35,7 @@
 
     <!-- Grid view -->
     <div v-else-if="viewMode === 'grid'" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-      <Card v-for="user in users" :key="user.id">
+      <Card v-for="user in filteredUsers" :key="user.id">
         <CardHeader class="pb-2">
           <div class="flex items-start justify-between">
             <div class="flex items-center gap-3">
@@ -74,7 +85,7 @@
           </TableRow>
         </TableHeader>
         <TableBody>
-          <TableRow v-for="user in users" :key="user.id">
+          <TableRow v-for="user in filteredUsers" :key="user.id">
             <TableCell class="font-medium">{{ user.username }}</TableCell>
             <TableCell class="text-muted-foreground">{{ user.email }}</TableCell>
             <TableCell>
@@ -150,7 +161,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, reactive } from 'vue'
+import { ref, onMounted, reactive, computed } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -162,10 +173,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { RiAddLine, RiGroupLine, RiMoreLine } from '@remixicon/vue'
+import { RiAddLine, RiGroupLine, RiMoreLine, RiSearchLine } from '@remixicon/vue'
 import { usersApi } from '@/api/users'
 import type { User } from '@/types/user'
 import ViewToggle from '@/components/ViewToggle.vue'
+import SearchFilter from '@/components/SearchFilter.vue'
 
 const users = ref<User[]>([])
 const loading = ref(true)
@@ -173,6 +185,38 @@ const dialogOpen = ref(false)
 const saving = ref(false)
 const editingUser = ref<User | null>(null)
 const viewMode = ref<'grid' | 'list'>('list')
+const search = ref('')
+const filterValues = ref<Record<string, string>>({})
+
+const filterDefs = [
+  {
+    label: 'Rolle',
+    value: 'role',
+    options: [
+      { label: 'Admin', value: 'admin' },
+      { label: 'User', value: 'user' },
+    ],
+  },
+  {
+    label: 'Status',
+    value: 'active',
+    options: [
+      { label: 'Aktiv', value: 'active' },
+      { label: 'Inaktiv', value: 'inactive' },
+    ],
+  },
+]
+
+const filteredUsers = computed(() => {
+  return users.value.filter(u => {
+    const q = search.value.toLowerCase()
+    if (q && !u.username.toLowerCase().includes(q) && !u.email.toLowerCase().includes(q)) return false
+    if (filterValues.value.role && u.role !== filterValues.value.role) return false
+    if (filterValues.value.active === 'active' && !u.is_active) return false
+    if (filterValues.value.active === 'inactive' && u.is_active) return false
+    return true
+  })
+})
 
 const form = reactive({ username: '', email: '', password: '', role: 'user' as 'admin' | 'user', is_active: true })
 

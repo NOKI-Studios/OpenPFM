@@ -1,8 +1,13 @@
 <template>
   <div class="space-y-4">
-    <div class="flex items-center justify-between">
-      <p class="text-sm text-muted-foreground">{{ printers.length }} Drucker konfiguriert</p>
-      <div class="flex items-center gap-2">
+    <div class="flex items-center justify-between gap-4 flex-wrap">
+      <SearchFilter
+        v-model:search="search"
+        v-model:filter-values="filterValues"
+        :filters="filterDefs"
+      />
+      <div class="flex items-center gap-2 ml-auto">
+        <p class="text-sm text-muted-foreground">{{ filteredPrinters.length }} von {{ printers.length }}</p>
         <ViewToggle v-model="viewMode" />
         <Tooltip>
           <TooltipTrigger as-child>
@@ -17,6 +22,12 @@
 
     <div v-if="loading" class="text-sm text-muted-foreground">Laden...</div>
 
+    <div v-else-if="filteredPrinters.length === 0 && printers.length > 0" class="flex flex-col items-center justify-center py-16 text-center">
+      <RiSearchLine class="w-12 h-12 text-muted-foreground/30 mb-4" />
+      <p class="text-sm font-medium">Keine Ergebnisse</p>
+      <p class="text-xs text-muted-foreground mt-1">Versuche andere Suchbegriffe oder Filter</p>
+    </div>
+
     <div v-else-if="printers.length === 0" class="flex flex-col items-center justify-center py-16 text-center">
       <RiPrinterLine class="w-12 h-12 text-muted-foreground/30 mb-4" />
       <p class="text-sm font-medium">Noch keine Drucker</p>
@@ -26,7 +37,7 @@
     <!-- Grid view -->
     <div v-else-if="viewMode === 'grid'" class="grid gap-4 grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
       <PrinterCard
-        v-for="printer in printers"
+        v-for="printer in filteredPrinters"
         :key="printer.id"
         :printer="printer"
         @edit="openEdit"
@@ -50,7 +61,7 @@
           </TableRow>
         </TableHeader>
         <TableBody>
-          <TableRow v-for="printer in printers" :key="printer.id">
+          <TableRow v-for="printer in filteredPrinters" :key="printer.id">
             <TableCell>
               <div class="w-2 h-2 rounded-full" :class="statusColor(printer.status)"></div>
             </TableCell>
@@ -150,7 +161,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, reactive } from 'vue'
+import { ref, onMounted, reactive, computed } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
@@ -161,11 +172,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { RiAddLine, RiPrinterLine, RiMoreLine } from '@remixicon/vue'
+import { RiAddLine, RiPrinterLine, RiMoreLine, RiSearchLine } from '@remixicon/vue'
 import { printersApi } from '@/api/printers'
 import type { Printer as PrinterType } from '@/types/printer'
 import ViewToggle from '@/components/ViewToggle.vue'
 import PrinterCard from '@/components/PrinterCard.vue'
+import SearchFilter from '@/components/SearchFilter.vue'
 
 const printers = ref<PrinterType[]>([])
 const loading = ref(true)
@@ -173,6 +185,41 @@ const dialogOpen = ref(false)
 const saving = ref(false)
 const editingPrinter = ref<PrinterType | null>(null)
 const viewMode = ref<'grid' | 'list'>('grid')
+const search = ref('')
+const filterValues = ref<Record<string, string>>({})
+
+const filterDefs = [
+  {
+    label: 'Status',
+    value: 'status',
+    options: [
+      { label: 'Online', value: 'online' },
+      { label: 'Offline', value: 'offline' },
+      { label: 'Druckt', value: 'printing' },
+      { label: 'Leerlauf', value: 'idle' },
+      { label: 'Fehler', value: 'error' },
+    ],
+  },
+  {
+    label: 'AMS',
+    value: 'ams',
+    options: [
+      { label: 'Mit AMS', value: 'yes' },
+      { label: 'Ohne AMS', value: 'no' },
+    ],
+  },
+]
+
+const filteredPrinters = computed(() => {
+  return printers.value.filter(p => {
+    const q = search.value.toLowerCase()
+    if (q && !p.name.toLowerCase().includes(q) && !p.model.toLowerCase().includes(q) && !p.ip_address.includes(q)) return false
+    if (filterValues.value.status && p.status !== filterValues.value.status) return false
+    if (filterValues.value.ams === 'yes' && !p.has_ams) return false
+    if (filterValues.value.ams === 'no' && p.has_ams) return false
+    return true
+  })
+})
 
 const printerModels = ['Bambu Lab A1', 'Bambu Lab A1 mini', 'Bambu Lab P1P', 'Bambu Lab P1S', 'Bambu Lab X1C', 'Bambu Lab X1E']
 
