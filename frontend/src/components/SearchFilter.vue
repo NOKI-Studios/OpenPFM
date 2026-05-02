@@ -2,7 +2,6 @@
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { RiSearchLine, RiCloseLine } from '@remixicon/vue'
-import { Button } from '@/components/ui/button'
 
 defineProps<{
   filters?: { label: string; value: string; options: { label: string; value: string }[] }[]
@@ -24,13 +23,13 @@ function clearFilter(key: string) {
 
 <template>
   <div class="flex items-center gap-2 flex-wrap">
-    <!-- Search -->
-    <div class="relative">
+    <!-- Search: volle Breite bis lg (weil Desktop-Sidebar bis md aktiv ist) -->
+    <div class="relative flex-1 min-w-0 max-w-48">
       <RiSearchLine class="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
       <Input
         v-model="search"
         placeholder="Suchen..."
-        class="pl-7 pr-7 w-48"
+        class="pl-7 pr-7 w-full lg:w-48"
       />
       <button
         v-if="search"
@@ -41,14 +40,14 @@ function clearFilter(key: string) {
       </button>
     </div>
 
-    <!-- Filter dropdowns -->
+    <!-- Filter dropdowns: kompakter bis lg -->
     <template v-for="filter in filters" :key="filter.value">
       <div class="relative">
         <Select
           :model-value="filterValues[filter.value] ?? '__all__'"
           @update:model-value="val => { const u = { ...filterValues }; if (val && val !== '__all__') u[filter.value] = val; else delete u[filter.value]; filterValues = u }"
         >
-          <SelectTrigger class="w-36">
+          <SelectTrigger class="w-24 lg:w-36">
             <SelectValue :placeholder="filter.label" />
           </SelectTrigger>
           <SelectContent>

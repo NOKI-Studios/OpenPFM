@@ -1,13 +1,15 @@
 <template>
   <div class="space-y-4">
-    <div class="flex items-center justify-between gap-4 flex-wrap">
+    <!-- Mobile-optimized toolbar -->
+    <div class="flex flex-wrap items-center gap-2">
       <SearchFilter
         v-model:search="search"
         v-model:filter-values="filterValues"
         :filters="filterDefs"
-      />
-      <div class="flex items-center gap-2 ml-auto">
-        <p class="text-sm text-muted-foreground">{{ filteredFilaments.length }} von {{ filaments.length }}</p>
+        class="flex-1 min-w-80"
+        />
+      <div class="flex items-center gap-2 shrink-0 ml-auto">
+        <p class="text-xs text-muted-foreground whitespace-nowrap">{{ filteredFilaments.length }} von {{ filaments.length }}</p>
         <ViewToggle v-model="viewMode" />
         <Tooltip>
           <TooltipTrigger as-child>
@@ -35,7 +37,7 @@
     </div>
 
     <!-- Grid view -->
-    <div v-else-if="viewMode === 'grid'" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+    <div v-else-if="viewMode === 'grid'" class="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
       <Card v-for="filament in filteredFilaments" :key="filament.id">
         <CardHeader class="pb-2">
           <div class="flex items-start justify-between">
@@ -46,14 +48,14 @@
               ></div>
               <div>
                 <CardTitle class="text-base">{{ filament.name }}</CardTitle>
-                <p class="text-xs text-muted-foreground">{{ filament.brand }}</p>
+              <p class="text-xs text-muted-foreground">{{ filament.brand }}</p>
               </div>
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" class="h-8 w-8 -mt-1">
-                  <RiMoreLine class="w-4 h-4" />
-                </Button>
+              <Button variant="ghost" size="icon" class="h-8 w-8 -mt-1">
+                <RiMoreLine class="w-4 h-4" />
+              </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem @click="openSpools(filament)">Spulen verwalten</DropdownMenuItem>
@@ -70,10 +72,7 @@
         <CardContent class="space-y-2">
           <div class="flex items-center gap-2">
             <Badge variant="outline">{{ filament.material }}</Badge>
-            <span
-              v-if="filament.spool_count <= filament.low_stock_threshold"
-              class="text-xs text-destructive font-medium"
-            >Niedrig</span>
+            <span v-if="filament.spool_count <= filament.low_stock_threshold" class="text-xs text-destructive font-medium">Niedrig</span>
           </div>
           <div class="grid grid-cols-2 gap-2 text-xs">
             <div>
@@ -96,7 +95,7 @@
     </div>
 
     <!-- List view -->
-    <div v-else>
+    <div v-else class="overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
@@ -113,40 +112,30 @@
         <TableBody>
           <TableRow v-for="filament in filteredFilaments" :key="filament.id">
             <TableCell>
-              <div
-                class="w-5 h-5 rounded-full border border-border"
-                :style="{ backgroundColor: filament.color_hex || '#888' }"
-              ></div>
+              <div class="w-5 h-5 rounded-full border border-border" :style="{ backgroundColor: filament.color_hex || '#888' }"></div>
             </TableCell>
             <TableCell class="font-medium">{{ filament.name }}</TableCell>
-            <TableCell>
-              <Badge variant="outline">{{ filament.material }}</Badge>
-            </TableCell>
+            <TableCell><Badge variant="outline">{{ filament.material }}</Badge></TableCell>
             <TableCell class="text-muted-foreground">{{ filament.brand }}</TableCell>
             <TableCell class="text-sm">{{ filament.nozzle_temp_min }}–{{ filament.nozzle_temp_max }}°C</TableCell>
             <TableCell class="text-sm">{{ filament.bed_temp }}°C</TableCell>
             <TableCell>
               <div class="flex items-center gap-2">
-                <span
-                  class="text-sm font-medium"
-                  :class="filament.spool_count <= filament.low_stock_threshold ? 'text-destructive' : ''"
-                >{{ filament.spool_count }}</span>
+                <span class="text-sm font-medium" :class="filament.spool_count <= filament.low_stock_threshold ? 'text-destructive' : ''">{{ filament.spool_count }}</span>
                 <span v-if="filament.spool_count <= filament.low_stock_threshold" class="text-xs text-destructive">low</span>
               </div>
             </TableCell>
             <TableCell>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" class="h-8 w-8">
-                    <RiMoreLine class="w-4 h-4" />
-                  </Button>
+                <Button variant="ghost" size="icon" class="h-8 w-8">
+                  <RiMoreLine class="w-4 h-4" />
+                </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem @click="openSpools(filament)">Spulen verwalten</DropdownMenuItem>
                   <DropdownMenuItem @click="openEdit(filament)">Bearbeiten</DropdownMenuItem>
-                  <DropdownMenuItem v-if="filament.purchase_url" @click="openUrl(filament.purchase_url)">
-                    Nachbestellen
-                  </DropdownMenuItem>
+                  <DropdownMenuItem v-if="filament.purchase_url" @click="openUrl(filament.purchase_url)">Nachbestellen</DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem class="text-destructive" @click="confirmDelete(filament)">Löschen</DropdownMenuItem>
                 </DropdownMenuContent>
@@ -250,18 +239,14 @@
             Keine Spulen vorhanden
           </div>
           <div v-else class="space-y-2">
-            <div
-              v-for="spool in spools"
-              :key="spool.id"
-              class="flex items-center justify-between p-3 border border-border rounded-md"
-            >
+            <div v-for="spool in spools" :key="spool.id" class="flex items-center justify-between p-3 border border-border rounded-md">
               <div>
                 <p class="text-sm font-medium">{{ spool.weight_remaining }}g verbleibend</p>
-                <p class="text-xs text-muted-foreground capitalize">{{ spool.location }}</p>
+              <p class="text-xs text-muted-foreground capitalize">{{ spool.location }}</p>
               </div>
-              <Button variant="ghost" size="icon" class="h-8 w-8 text-destructive" @click="deleteSpool(spool.id)">
-                <RiDeleteBin6Line class="w-4 h-4" />
-              </Button>
+            <Button variant="ghost" size="icon" class="h-8 w-8 text-destructive" @click="deleteSpool(spool.id)">
+              <RiDeleteBin6Line class="w-4 h-4" />
+            </Button>
             </div>
           </div>
         </div>
@@ -301,19 +286,8 @@ const search = ref('')
 const filterValues = ref<Record<string, string>>({})
 
 const filterDefs = [
-  {
-    label: 'Material',
-    value: 'material',
-    options: ['PLA', 'PETG', 'ABS', 'ASA', 'TPU', 'PA', 'PC', 'PLA-CF', 'PETG-CF', 'Other'].map(m => ({ label: m, value: m })),
-  },
-  {
-    label: 'Bestand',
-    value: 'stock',
-    options: [
-      { label: 'Niedrig', value: 'low' },
-      { label: 'OK', value: 'ok' },
-    ],
-  },
+  { label: 'Material', value: 'material', options: ['PLA', 'PETG', 'ABS', 'ASA', 'TPU', 'PA', 'PC', 'PLA-CF', 'PETG-CF', 'Other'].map(m => ({ label: m, value: m })) },
+  { label: 'Bestand', value: 'stock', options: [{ label: 'Niedrig', value: 'low' }, { label: 'OK', value: 'ok' }] },
 ]
 
 const filteredFilaments = computed(() => {
@@ -342,20 +316,17 @@ const resetForm = () => {
 }
 
 const openCreate = () => { editingFilament.value = null; resetForm(); dialogOpen.value = true }
-
 const openEdit = (f: Filament) => {
   editingFilament.value = f
   Object.assign(form, { ...f, color_hex: f.color_hex ?? '', purchase_url: f.purchase_url ?? '' })
   dialogOpen.value = true
 }
-
 const openSpools = async (f: Filament) => {
   selectedFilament.value = f
   const { data } = await filamentsApi.getSpools(f.id)
   spools.value = data
   spoolsDialogOpen.value = true
 }
-
 const addSpool = async () => {
   if (!selectedFilament.value) return
   const weight = parseFloat(prompt('Verbleibendes Gewicht (g):', String(selectedFilament.value.spool_weight_total)) ?? '0')
@@ -365,7 +336,6 @@ const addSpool = async () => {
   spools.value = data
   await loadFilaments()
 }
-
 const deleteSpool = async (id: number) => {
   if (!confirm('Spule wirklich löschen?')) return
   await filamentsApi.deleteSpool(id)
@@ -375,7 +345,6 @@ const deleteSpool = async (id: number) => {
     await loadFilaments()
   }
 }
-
 const saveFilament = async () => {
   saving.value = true
   try {
@@ -391,21 +360,17 @@ const saveFilament = async () => {
     saving.value = false
   }
 }
-
 const confirmDelete = async (f: Filament) => {
   if (confirm(`Filament "${f.name}" wirklich löschen?`)) {
     await filamentsApi.delete(f.id)
     await loadFilaments()
   }
 }
-
 const openUrl = (url: string | null) => { if (url) window.open(url, '_blank') }
-
 const loadFilaments = async () => {
   const { data } = await filamentsApi.getAll()
   filaments.value = data
 }
-
 onMounted(async () => {
   try { await loadFilaments() } finally { loading.value = false }
 })

@@ -1,13 +1,15 @@
 <template>
   <div class="space-y-4">
-    <div class="flex items-center justify-between gap-4 flex-wrap">
+    <!-- Mobile-optimized toolbar -->
+    <div class="flex flex-wrap items-center gap-2">
       <SearchFilter
         v-model:search="search"
         v-model:filter-values="filterValues"
         :filters="filterDefs"
-      />
-      <div class="flex items-center gap-2 ml-auto">
-        <p class="text-sm text-muted-foreground">{{ filteredPrinters.length }} von {{ printers.length }}</p>
+        class="flex-1 min-w-80"
+        />
+      <div class="flex items-center gap-2 shrink-0 ml-auto">
+        <p class="text-xs text-muted-foreground whitespace-nowrap">{{ filteredPrinters.length }} von {{ printers.length }}</p>
         <ViewToggle v-model="viewMode" />
         <Tooltip>
           <TooltipTrigger as-child>
@@ -34,8 +36,8 @@
       <p class="text-xs text-muted-foreground mt-1">Füge deinen ersten Drucker hinzu</p>
     </div>
 
-    <!-- Grid view -->
-    <div v-else-if="viewMode === 'grid'" class="grid gap-4 grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+    <!-- Grid view: 1 col mobile → 2 col sm → 3 col md → 4 col xl -->
+    <div v-else-if="viewMode === 'grid'" class="grid gap-3 grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(200px,280px))] sm:justify-start">
       <PrinterCard
         v-for="printer in filteredPrinters"
         :key="printer.id"
@@ -46,7 +48,7 @@
     </div>
 
     <!-- List view -->
-    <div v-else>
+    <div v-else class="overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
@@ -76,9 +78,9 @@
             <TableCell>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" class="h-8 w-8">
-                    <RiMoreLine class="w-4 h-4" />
-                  </Button>
+                <Button variant="ghost" size="icon" class="h-8 w-8">
+                  <RiMoreLine class="w-4 h-4" />
+                </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem @click="openEdit(printer)">Bearbeiten</DropdownMenuItem>
@@ -224,39 +226,23 @@ const filteredPrinters = computed(() => {
 const printerModels = ['Bambu Lab A1', 'Bambu Lab A1 mini', 'Bambu Lab P1P', 'Bambu Lab P1S', 'Bambu Lab X1C', 'Bambu Lab X1E']
 
 const form = reactive({
-  name: '',
-  model: '',
-  serial_number: '',
-  ip_address: '',
-  access_code: '',
-  nozzle_diameter: 0.4,
-  has_ams: false,
-  purchase_url: '',
+  name: '', model: '', serial_number: '', ip_address: '',
+  access_code: '', nozzle_diameter: 0.4, has_ams: false, purchase_url: '',
 })
 
 const resetForm = () => {
-  form.name = ''
-  form.model = ''
-  form.serial_number = ''
-  form.ip_address = ''
-  form.access_code = ''
-  form.nozzle_diameter = 0.4
-  form.has_ams = false
-  form.purchase_url = ''
+  form.name = ''; form.model = ''; form.serial_number = ''; form.ip_address = ''
+  form.access_code = ''; form.nozzle_diameter = 0.4; form.has_ams = false; form.purchase_url = ''
 }
 
 const openCreate = () => { editingPrinter.value = null; resetForm(); dialogOpen.value = true }
 
 const openEdit = (printer: PrinterType) => {
   editingPrinter.value = printer
-  form.name = printer.name
-  form.model = printer.model
-  form.serial_number = printer.serial_number ?? ''
-  form.ip_address = printer.ip_address
-  form.access_code = printer.access_code
-  form.nozzle_diameter = printer.nozzle_diameter
-  form.has_ams = printer.has_ams
-  form.purchase_url = printer.purchase_url ?? ''
+  form.name = printer.name; form.model = printer.model
+  form.serial_number = printer.serial_number ?? ''; form.ip_address = printer.ip_address
+  form.access_code = printer.access_code; form.nozzle_diameter = printer.nozzle_diameter
+  form.has_ams = printer.has_ams; form.purchase_url = printer.purchase_url ?? ''
   dialogOpen.value = true
 }
 
@@ -264,13 +250,9 @@ const savePrinter = async () => {
   saving.value = true
   try {
     const data = {
-      name: form.name,
-      model: form.model,
-      serial_number: form.serial_number || undefined,
-      ip_address: form.ip_address,
-      access_code: form.access_code,
-      nozzle_diameter: form.nozzle_diameter,
-      has_ams: form.has_ams,
+      name: form.name, model: form.model, serial_number: form.serial_number || undefined,
+      ip_address: form.ip_address, access_code: form.access_code,
+      nozzle_diameter: form.nozzle_diameter, has_ams: form.has_ams,
       purchase_url: form.purchase_url || undefined,
     }
     if (editingPrinter.value) {
@@ -295,10 +277,8 @@ const confirmDelete = async (printer: PrinterType) => {
 const openUrl = (url: string | null) => { if (url) window.open(url, '_blank') }
 
 const statusColor = (status: string) => ({
-  'bg-green-500': status === 'online',
-  'bg-blue-500': status === 'printing',
-  'bg-yellow-500': status === 'idle',
-  'bg-red-500': status === 'error',
+  'bg-green-500': status === 'online', 'bg-blue-500': status === 'printing',
+  'bg-yellow-500': status === 'idle', 'bg-red-500': status === 'error',
   'bg-muted-foreground': status === 'offline',
 })
 

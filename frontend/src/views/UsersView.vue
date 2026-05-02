@@ -1,13 +1,15 @@
 <template>
   <div class="space-y-4">
-    <div class="flex items-center justify-between gap-4 flex-wrap">
+    <!-- Mobile-optimized toolbar -->
+    <div class="flex flex-wrap items-center gap-2">
       <SearchFilter
         v-model:search="search"
         v-model:filter-values="filterValues"
         :filters="filterDefs"
-      />
-      <div class="flex items-center gap-2 ml-auto">
-        <p class="text-sm text-muted-foreground">{{ filteredUsers.length }} von {{ users.length }}</p>
+        class="flex-1 min-w-80"
+        />
+      <div class="flex items-center gap-2 shrink-0 ml-auto">
+        <p class="text-xs text-muted-foreground whitespace-nowrap">{{ filteredUsers.length }} von {{ users.length }}</p>
         <ViewToggle v-model="viewMode" />
         <Tooltip>
           <TooltipTrigger as-child>
@@ -34,7 +36,7 @@
     </div>
 
     <!-- Grid view -->
-    <div v-else-if="viewMode === 'grid'" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+    <div v-else-if="viewMode === 'grid'" class="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
       <Card v-for="user in filteredUsers" :key="user.id">
         <CardHeader class="pb-2">
           <div class="flex items-start justify-between">
@@ -44,14 +46,14 @@
               </div>
               <div>
                 <CardTitle class="text-base">{{ user.username }}</CardTitle>
-                <p class="text-xs text-muted-foreground">{{ user.email }}</p>
+              <p class="text-xs text-muted-foreground">{{ user.email }}</p>
               </div>
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" class="h-8 w-8 -mt-1">
-                  <RiMoreLine class="w-4 h-4" />
-                </Button>
+              <Button variant="ghost" size="icon" class="h-8 w-8 -mt-1">
+                <RiMoreLine class="w-4 h-4" />
+              </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem @click="openEdit(user)">Bearbeiten</DropdownMenuItem>
@@ -73,7 +75,7 @@
     </div>
 
     <!-- List view -->
-    <div v-else>
+    <div v-else class="overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
@@ -99,9 +101,9 @@
             <TableCell>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" class="h-8 w-8">
-                    <RiMoreLine class="w-4 h-4" />
-                  </Button>
+                <Button variant="ghost" size="icon" class="h-8 w-8">
+                  <RiMoreLine class="w-4 h-4" />
+                </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem @click="openEdit(user)">Bearbeiten</DropdownMenuItem>
@@ -189,22 +191,8 @@ const search = ref('')
 const filterValues = ref<Record<string, string>>({})
 
 const filterDefs = [
-  {
-    label: 'Rolle',
-    value: 'role',
-    options: [
-      { label: 'Admin', value: 'admin' },
-      { label: 'User', value: 'user' },
-    ],
-  },
-  {
-    label: 'Status',
-    value: 'active',
-    options: [
-      { label: 'Aktiv', value: 'active' },
-      { label: 'Inaktiv', value: 'inactive' },
-    ],
-  },
+  { label: 'Rolle', value: 'role', options: [{ label: 'Admin', value: 'admin' }, { label: 'User', value: 'user' }] },
+  { label: 'Status', value: 'active', options: [{ label: 'Aktiv', value: 'active' }, { label: 'Inaktiv', value: 'inactive' }] },
 ]
 
 const filteredUsers = computed(() => {
@@ -219,18 +207,14 @@ const filteredUsers = computed(() => {
 })
 
 const form = reactive({ username: '', email: '', password: '', role: 'user' as 'admin' | 'user', is_active: true })
-
 const resetForm = () => { form.username = ''; form.email = ''; form.password = ''; form.role = 'user'; form.is_active = true }
-
 const openCreate = () => { editingUser.value = null; resetForm(); dialogOpen.value = true }
-
 const openEdit = (user: User) => {
   editingUser.value = user
   form.username = user.username; form.email = user.email
   form.password = ''; form.role = user.role; form.is_active = user.is_active
   dialogOpen.value = true
 }
-
 const saveUser = async () => {
   saving.value = true
   try {
@@ -247,19 +231,16 @@ const saveUser = async () => {
     saving.value = false
   }
 }
-
 const confirmDelete = async (user: User) => {
   if (confirm(`Benutzer "${user.username}" wirklich löschen?`)) {
     await usersApi.delete(user.id)
     await loadUsers()
   }
 }
-
 const loadUsers = async () => {
   const { data } = await usersApi.getAll()
   users.value = data
 }
-
 onMounted(async () => {
   try { await loadUsers() } finally { loading.value = false }
 })

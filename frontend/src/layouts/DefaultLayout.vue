@@ -3,7 +3,7 @@
     <AppSidebar />
     <SidebarInset>
       <header class="flex h-12 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear">
-        <div class="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
+        <div class="flex w-full items-center gap-1 px-3 lg:gap-2 lg:px-6">
           <SidebarTrigger class="-ml-1" />
           <Separator orientation="vertical" class="mx-2 h-4" />
           <Breadcrumb>
@@ -21,7 +21,7 @@
           </div>
         </div>
       </header>
-      <div class="flex flex-1 flex-col gap-4 overflow-y-auto p-4 lg:p-6">
+      <div class="flex flex-1 flex-col gap-4 overflow-y-auto p-3 sm:p-4 lg:p-6">
         <RouterView />
       </div>
     </SidebarInset>
