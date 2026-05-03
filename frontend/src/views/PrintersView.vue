@@ -1,25 +1,25 @@
 <template>
   <div class="space-y-4">
-    <!-- Mobile-optimized toolbar -->
-    <div class="flex flex-wrap items-center gap-2">
+    <!-- Toolbar -->
+    <div class="flex items-center gap-2">
       <SearchFilter
-        v-model:search="search"
-        v-model:filter-values="filterValues"
-        :filters="filterDefs"
-        class="flex-1 min-w-80"
-        />
-      <div class="flex items-center gap-2 shrink-0 ml-auto">
-        <p class="text-xs text-muted-foreground whitespace-nowrap">{{ filteredPrinters.length }} von {{ printers.length }}</p>
-        <ViewToggle v-model="viewMode" />
-        <Tooltip>
-          <TooltipTrigger as-child>
-            <Button size="icon" @click="openCreate">
-              <RiAddLine class="w-4 h-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Drucker hinzufügen</TooltipContent>
-        </Tooltip>
-      </div>
+          v-model:search="search"
+          v-model:filter-values="filterValues"
+          :filters="filterDefs"
+          class="flex-1 min-w-0"
+      />
+      <p class="text-xs text-muted-foreground whitespace-nowrap shrink-0 hidden sm:flex">
+        {{ filteredPrinters.length }} von {{ printers.length }}
+      </p>
+      <ViewToggle v-model="viewMode" class="hidden sm:flex" />
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <Button size="icon" @click="openCreate">
+            <RiAddLine class="w-4 h-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Drucker hinzufügen</TooltipContent>
+      </Tooltip>
     </div>
 
     <div v-if="loading" class="text-sm text-muted-foreground">Laden...</div>
@@ -36,14 +36,14 @@
       <p class="text-xs text-muted-foreground mt-1">Füge deinen ersten Drucker hinzu</p>
     </div>
 
-    <!-- Grid view: 1 col mobile → 2 col sm → 3 col md → 4 col xl -->
-    <div v-else-if="viewMode === 'grid'" class="grid gap-3 grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(200px,280px))] sm:justify-start">
+    <!-- Grid view -->
+    <div v-else-if="effectiveViewMode === 'grid'" class="grid gap-3 grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(200px,280px))] sm:justify-start">
       <PrinterCard
-        v-for="printer in filteredPrinters"
-        :key="printer.id"
-        :printer="printer"
-        @edit="openEdit"
-        @delete="confirmDelete"
+          v-for="printer in filteredPrinters"
+          :key="printer.id"
+          :printer="printer"
+          @edit="openEdit"
+          @delete="confirmDelete"
       />
     </div>
 
@@ -78,9 +78,9 @@
             <TableCell>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" class="h-8 w-8">
-                  <RiMoreLine class="w-4 h-4" />
-                </Button>
+                  <Button variant="ghost" size="icon" class="h-8 w-8">
+                    <RiMoreLine class="w-4 h-4" />
+                  </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem @click="openEdit(printer)">Bearbeiten</DropdownMenuItem>
@@ -147,8 +147,8 @@
           </div>
           <div class="flex items-center gap-2">
             <Switch
-              :model-value="form.has_ams"
-              @update:model-value="(val: boolean) => form.has_ams = val"
+                :model-value="form.has_ams"
+                @update:model-value="(val: boolean) => form.has_ams = val"
             />
             <Label>Hat AMS / Multi-Material System</Label>
           </div>
@@ -164,6 +164,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, reactive, computed } from 'vue'
+import { useMediaQuery } from '@vueuse/core'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
@@ -189,6 +190,9 @@ const editingPrinter = ref<PrinterType | null>(null)
 const viewMode = ref<'grid' | 'list'>('grid')
 const search = ref('')
 const filterValues = ref<Record<string, string>>({})
+
+const isMobile = useMediaQuery('(max-width: 639px)')
+const effectiveViewMode = computed(() => isMobile.value ? 'grid' : viewMode.value)
 
 const filterDefs = [
   {

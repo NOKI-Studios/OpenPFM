@@ -1,25 +1,25 @@
 <template>
   <div class="space-y-4">
-    <!-- Mobile-optimized toolbar -->
-    <div class="flex flex-wrap items-center gap-2">
+    <!-- Toolbar -->
+    <div class="flex items-center gap-2">
       <SearchFilter
-        v-model:search="search"
-        v-model:filter-values="filterValues"
-        :filters="filterDefs"
-        class="flex-1 min-w-80"
-        />
-      <div class="flex items-center gap-2 shrink-0 ml-auto">
-        <p class="text-xs text-muted-foreground whitespace-nowrap">{{ filteredFilaments.length }} von {{ filaments.length }}</p>
-        <ViewToggle v-model="viewMode" />
-        <Tooltip>
-          <TooltipTrigger as-child>
-            <Button size="icon" @click="openCreate">
-              <RiAddLine class="w-4 h-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Filament hinzufügen</TooltipContent>
-        </Tooltip>
-      </div>
+          v-model:search="search"
+          v-model:filter-values="filterValues"
+          :filters="filterDefs"
+          class="flex-1 min-w-0"
+      />
+      <p class="text-xs text-muted-foreground whitespace-nowrap shrink-0 hidden sm:flex">
+        {{ filteredFilaments.length }} von {{ filaments.length }}
+      </p>
+      <ViewToggle v-model="viewMode" class="hidden sm:flex" />
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <Button size="icon" @click="openCreate">
+            <RiAddLine class="w-4 h-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Filament hinzufügen</TooltipContent>
+      </Tooltip>
     </div>
 
     <div v-if="loading" class="text-sm text-muted-foreground">Laden...</div>
