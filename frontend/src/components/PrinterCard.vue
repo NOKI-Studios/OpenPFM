@@ -104,6 +104,7 @@ import { Badge } from '@/components/ui/badge'
 import { RiPrinterLine, RiMoreLine, RiCameraLine, RiCameraOffLine } from '@remixicon/vue'
 import type { Printer } from '@/types/printer'
 import { usePrinterStatus } from '@/composables/usePrinterStatus'
+import {printersApi} from "@/api/printers.ts";
 
 const props = defineProps<{ printer: Printer }>()
 defineEmits<{ edit: [printer: Printer]; delete: [printer: Printer] }>()
@@ -152,15 +153,17 @@ const snapshotSrc    = ref('')
 let pendingSnapshot  = false
 let snapshotTimer: ReturnType<typeof setInterval> | null = null
 
-function buildSnapshotUrl(): string {
-    const host = window.location.hostname
-    return `http://${host}:8000/printers/${props.printer.id}/snapshot?t=${Date.now()}`
-}
-
-function requestSnapshot() {
+async function requestSnapshot() {
     if (pendingSnapshot) return
     pendingSnapshot = true
-    snapshotSrc.value = buildSnapshotUrl()
+    try {
+        const old = snapshotSrc.value
+        snapshotSrc.value = await printersApi.snapshot(props.printer.id)
+        if (old.startsWith('blob:')) URL.revokeObjectURL(old)
+    } catch {
+        pendingSnapshot = false
+        cameraError.value = true
+    }
 }
 
 function startPolling() {
