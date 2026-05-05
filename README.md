@@ -11,7 +11,10 @@ Check out downgrading here: [BambuLab Wiki](https://wiki.bambulab.com/en/knowled
 
 ## Info
 
-OpenPFM is currently in active development. Please submit issues, feature requests or pull requests when you encounter problems.
+Due to Licencing problems with n8n as a component in software, we will build our own minimal node based automation tool.
+N8N Will go in the near future.
+
+Keep in mind that OpenPFM is currently in active development. Please submit issues, feature requests or pull requests when you encounter problems.
 
 ## Features & Planned Features
 

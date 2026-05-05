@@ -32,6 +32,7 @@ const router = createRouter({
                 { path: 'printers', component: () => import('@/views/PrintersView.vue') },
                 { path: 'filaments', component: () => import('@/views/FilamentsView.vue') },
                 { path: 'users', component: () => import('@/views/UsersView.vue') },
+                { path: 'automation', component: () => import('@/views/AutomationView.vue') },
                 { path: 'settings', component: () => import('@/views/DashboardView.vue') },
                 { path: 'help', component: () => import('@/views/DashboardView.vue') },
             ],
